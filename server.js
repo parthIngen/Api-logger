@@ -15,6 +15,10 @@ app.use(express.json({ limit: '10mb' }));
 // Routes
 app.use('/api', logRoutes);
 
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Welcome to the API Logger Service' });
+});
+
 // Health check route (very useful for Render)
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'api-logger' });
