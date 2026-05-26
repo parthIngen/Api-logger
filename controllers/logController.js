@@ -2,13 +2,32 @@ const ApiLog = require('../models/ApiLog');
 
 exports.createLog = async (req, res) => {
   try {
-    let logData = req.body;
+    let logData = { ...req.body };
 
-    // Clean undefined values (very important)
-    logData = JSON.parse(JSON.stringify(logData)); // removes undefined
+    // Deep clean: Remove undefined, null strings, and fix bad values
+    const cleanObject = (obj) => {
+      if (obj === null || obj === undefined) return null;
+      if (typeof obj !== 'object') {
+        return obj === "undefined" ? null : obj;
+      }
+      if (Array.isArray(obj)) {
+        return obj.map(cleanObject);
+      }
+      const cleaned = {};
+      for (const key in obj) {
+        cleaned[key] = cleanObject(obj[key]);
+      }
+      return cleaned;
+    };
+
+    logData = cleanObject(logData);
 
     // Ensure required fields
     logData.thresholdMs = logData.thresholdMs || 1000;
+    logData.requestHeaders = logData.requestHeaders || {};
+    logData.queryParams = logData.queryParams || {};
+    logData.routeParams = logData.routeParams || {};
+    logData.requestBody = logData.requestBody || {};
 
     const log = await ApiLog.create(logData);
 
@@ -18,14 +37,13 @@ exports.createLog = async (req, res) => {
     });
   } catch (error) {
     console.error('=== Logger Save Error ===');
-    console.error('Error Message:', error.message);
-    console.error('Error Name:', error.name);
-    if (error.errors) console.error('Validation Errors:', error.errors);
-    
+    console.error('Error:', error.message);
+    if (error.errors) console.error('Validation:', error.errors);
+
     res.status(500).json({ 
       success: false, 
       error: 'Failed to save log',
-      details: error.message   // ← Temporarily send real error for debugging
+      details: error.message 
     });
   }
 };
