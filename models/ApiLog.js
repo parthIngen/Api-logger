@@ -1,19 +1,30 @@
 const mongoose = require('mongoose');
 
 const apiLogSchema = new mongoose.Schema({
-  method: String,
-  url: String,
-  statusCode: Number,
-  durationMs: Number,
-  thresholdMs: { type: Number, default: 500 },
+  method: { type: String, required: true },
+  url: { type: String, required: true },
+  statusCode: { type: Number, required: true },
+  durationMs: { type: Number, required: true },
+  thresholdMs: { type: Number, default: 1000 },
   ip: String,
-  userId: { type: String, default: null },
-  userRole: { type: String, default: null },
+  userId: String,
+  userRole: String,
   token: String,
-  requestHeaders: Object,
-  queryParams: Object,
-  routeParams: Object,
-  requestBody: Object,
-}, { timestamps: true });
+  requestHeaders: { type: Object, default: {} },
+  queryParams: { type: Object, default: {} },
+  routeParams: { type: Object, default: {} },
+  requestBody: { type: Object, default: {} },
+  isSlow: { type: Boolean, default: false }
+}, { 
+  timestamps: true 
+});
+
+// Auto flag slow requests
+apiLogSchema.pre('save', function(next) {
+  if (this.durationMs > this.thresholdMs) {
+    this.isSlow = true;
+  }
+  next();
+});
 
 module.exports = mongoose.model('ApiLog', apiLogSchema);

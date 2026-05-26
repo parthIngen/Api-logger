@@ -18,6 +18,7 @@ app.use('/api', logRoutes);
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Welcome to the API Logger Service' });
 });
+app.post
 
 // Health check route (very useful for Render)
 app.get('/health', (req, res) => {
