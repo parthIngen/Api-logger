@@ -16,12 +16,13 @@ const apiLogSchema = new mongoose.Schema({
   requestBody: { type: Object, default: {} },
   isSlow: { type: Boolean, default: false }
 }, { 
-  timestamps: true,
-  strict: false   // ← Helps avoid validation issues
+  timestamps: true 
 });
 
 apiLogSchema.pre('save', function(next) {
-  if (this.durationMs > this.thresholdMs) this.isSlow = true;
+  if (this.durationMs > this.thresholdMs) {
+    this.isSlow = true;
+  }
   next();
 });
 

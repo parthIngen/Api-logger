@@ -2,34 +2,26 @@ const ApiLog = require('../models/ApiLog');
 
 exports.createLog = async (req, res) => {
   try {
-    let logData = { ...req.body };
+    const logData = req.body;
 
-    // Deep clean: Remove undefined, null strings, and fix bad values
-    const cleanObject = (obj) => {
-      if (obj === null || obj === undefined) return null;
-      if (typeof obj !== 'object') {
-        return obj === "undefined" ? null : obj;
-      }
-      if (Array.isArray(obj)) {
-        return obj.map(cleanObject);
-      }
-      const cleaned = {};
-      for (const key in obj) {
-        cleaned[key] = cleanObject(obj[key]);
-      }
-      return cleaned;
+    // Minimal cleaning only - remove actual undefined values
+    const cleanedData = {
+      method: logData.method,
+      url: logData.url,
+      statusCode: logData.statusCode,
+      durationMs: logData.durationMs,
+      thresholdMs: logData.thresholdMs || 1000,
+      ip: logData.ip || null,
+      userId: logData.userId || null,
+      userRole: logData.userRole || null,
+      token: logData.token || null,
+      requestHeaders: logData.requestHeaders || {},
+      queryParams: logData.queryParams || {},
+      routeParams: logData.routeParams || {},
+      requestBody: logData.requestBody || {}
     };
 
-    logData = cleanObject(logData);
-
-    // Ensure required fields
-    logData.thresholdMs = logData.thresholdMs || 1000;
-    logData.requestHeaders = logData.requestHeaders || {};
-    logData.queryParams = logData.queryParams || {};
-    logData.routeParams = logData.routeParams || {};
-    logData.requestBody = logData.requestBody || {};
-
-    const log = await ApiLog.create(logData);
+    const log = await ApiLog.create(cleanedData);
 
     res.status(201).json({ 
       success: true, 
@@ -37,8 +29,10 @@ exports.createLog = async (req, res) => {
     });
   } catch (error) {
     console.error('=== Logger Save Error ===');
-    console.error('Error:', error.message);
-    if (error.errors) console.error('Validation:', error.errors);
+    console.error('Error Message:', error.message);
+    if (error.errors) {
+      console.error('Validation Errors:', JSON.stringify(error.errors, null, 2));
+    }
 
     res.status(500).json({ 
       success: false, 
